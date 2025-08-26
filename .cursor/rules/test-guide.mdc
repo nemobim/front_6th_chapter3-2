@@ -1,0 +1,211 @@
+---
+description: TDD Guidelines for AI Assistants
+globs:
+alwaysApply: true
+---
+
+# TDD Guidelines for AI Assistants
+
+_Based on Kent Beck's philosophy: "Make it work, make it right, make it fast"_
+
+## Core Principles (Immediate Intervention Required if Violated)
+
+1. **Write Tests Before Implementation** – Never write production code without a failing test first.
+2. **Minimum Implementation Rule** – Hardcoding is acceptable for the initial pass.
+3. **Refactor Only When Green** – Improve structure only after all tests pass.
+4. **One at a Time** – One test, one behavior, one failure cause.
+
+---
+
+## TDD Cycle (Red-Green-Refactor)
+
+### Step 1: Write a Failing Test (RED)
+
+```javascript
+test('returns success: true when login succeeds', () => {
+  const result = login('user@test.com', 'password123');
+  expect(result.success).toBe(true);
+});
+// Run test → ensure failure first
+```
+
+### Step 2: Pass with Minimum Implementation (GREEN)
+
+```javascript
+const login = () => {
+  return { success: true }; // Hardcoding allowed
+};
+```
+
+### Step 3: Add a New Test to Force Generalization
+
+```javascript
+test('returns success: false when login fails', () => {
+  const result = login('user@test.com', 'wrongpassword');
+  expect(result.success).toBe(false);
+});
+```
+
+### Step 4: Implement a Generalized Solution
+
+```javascript
+const login = (email, password) => {
+  return {
+    success: email === 'user@test.com' && password === 'password123',
+  };
+};
+```
+
+---
+
+## Detailed Guidelines
+
+### 1. Readability & Intent-First Design
+
+- Use **descriptive, sentence-style test names**: What / When / How.
+- Follow **AAA structure**: Arrange → Act → Assert, or Given → When → Then.
+- Minimize control flow logic (if/loop) within tests.
+- Each test must clearly communicate **what it verifies**.
+
+```javascript
+// ✅ Good Example
+test('returns an error message when checking out an empty cart', () => {
+  const cart = createEmptyCart(); // Arrange
+  const result = checkout(cart); // Act
+  expect(result.error).toBe('Your cart is empty'); // Assert
+});
+```
+
+---
+
+### 2. Allow Meaningful Duplication (DAMP Principle)
+
+- **Allowed duplication**: Enhances clarity and intent within individual tests.
+- **Forbidden duplication**: Abstracts away critical context or increases maintenance cost.
+- Avoid excessive helpers/fixtures if they obscure the test purpose.
+- Always define expected results **explicitly within the test**.
+
+---
+
+### 3. Avoid Implementation-Dependent Tests
+
+- Don’t test private methods, internal states, or call counts.
+- Focus on **observable behavior** and **public interfaces**.
+- Tests should remain valid even after internal refactoring.
+
+```javascript
+// ✅ Behavior-based test
+test('applies 20% discount correctly', () => {
+  expect(calculatePrice(1000, 0.2)).toBe(800);
+});
+
+// ❌ Implementation-dependent
+test('calls multiply method internally', () => {
+  /* Do not test internal calls */
+});
+```
+
+---
+
+### 4. Deterministic & Isolated Tests
+
+- Eliminate flaky tests by controlling:
+
+  - **Time** → Use fixed system clocks or fake timers.
+  - **Randomness** → Provide seeds or fixed values.
+  - **Network calls** → Use mocks/stubs or MSW (Mock Service Worker).
+
+- Do not share state between tests.
+- Each test should run independently in any order.
+
+---
+
+### 5. Single Responsibility Per Test
+
+- One test = one behavior.
+- Multiple assertions are okay only if they validate **different aspects of the same behavior**.
+- A test should fail for **one clear reason**.
+
+---
+
+### 6. Maintainability & Scalability
+
+- Minimize global fixtures or hidden setup logic.
+- Inline duplication where it improves readability.
+- Use builders/helpers only when they **reduce noise**, not when they hide intent.
+- A failing test should tell you **exactly** what went wrong without reading the implementation.
+
+---
+
+### 7. Balanced Test Strategy
+
+- **Unit tests**: Fast, frequent, cover core logic.
+- **Integration/E2E tests**: Fewer but higher confidence.
+- Apply the test **pyramid** or **trophy** depending on your team’s domain.
+
+---
+
+### 8. Robust Assertions
+
+- Avoid over-relying on large snapshot tests.
+- Prefer explicit assertions on critical properties using `toEqual`, `toBe`, or custom matchers.
+- Provide **meaningful failure messages** where possible.
+
+---
+
+### 9. Code Coverage is a Tool, Not the Goal
+
+- Focus on **critical paths, edge cases, and regression scenarios**.
+- High coverage naturally emerges from well-scoped, valuable tests.
+- Do not write meaningless tests just to boost numbers.
+
+---
+
+## Feature Development Workflow
+
+For any new feature:
+
+1. **Break it down** – “What’s the simplest case?”
+2. **RED** – Write a failing test first.
+3. **GREEN** – Pass it using minimal implementation.
+4. **PRESSURE** – Add tests that force generalization.
+5. **REFACTOR** – Improve structure while staying green.
+6. **REPEAT** – Iterate for the next scenario.
+
+---
+
+## Common Test Smells (Refactor Immediately)
+
+- Using arbitrary delays or `sleep`.
+- Depending on randomness (`Math.random`, UUID without control).
+- Overly complex mocks and stubs.
+- Large, implicit global fixtures.
+- Over-abstracted tests that hide intent.
+- Vague or misleading test names.
+- Tightly coupled tests that fail when implementation changes.
+
+---
+
+## Code Review Checklist
+
+### TDD Process
+
+- [ ] Were tests written **before** implementation?
+- [ ] Does each test verify **only one behavior**?
+- [ ] Did implementation start with a **minimum viable solution**?
+- [ ] Was refactoring done **only after all tests passed**?
+
+### Test Quality
+
+- [ ] Are test names descriptive and meaningful?
+- [ ] Do tests verify **behavior**, not implementation details?
+- [ ] Are expected values written explicitly in tests?
+- [ ] Are external dependencies (time, network, randomness) properly controlled?
+
+---
+
+**Key Insight**:
+TDD is not just a testing methodology — it’s a **design discipline**.
+By writing tests first, we guide our design toward better structure and gain confidence in every small step.
+
+---
