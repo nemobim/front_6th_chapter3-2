@@ -1,4 +1,4 @@
-import { EventForm } from '../types';
+import { EventForm, RepeatType } from '../types';
 import { formatDate } from './dateUtils';
 
 /**
@@ -12,12 +12,12 @@ export function generateRepeatEvents(event: EventForm): EventForm[] {
   }
 
   const startDate = new Date(event.date);
-  const endDate = event.repeat.endDate ? new Date(event.repeat.endDate) : null;
+  const endDate = event.repeat.endDate ? new Date(event.repeat.endDate) : new Date('2025-12-31');
 
   const events: EventForm[] = [];
   let currentDate = new Date(startDate);
 
-  while (endDate && currentDate <= endDate) {
+  while (currentDate <= endDate) {
     events.push({
       ...event,
       date: formatDate(currentDate),
@@ -36,24 +36,40 @@ export function generateRepeatEvents(event: EventForm): EventForm[] {
  * @param interval 간격
  * @returns 다음 반복 날짜
  */
-function getNextRepeatDate(currentDate: Date, repeatType: string, interval: number): Date {
+function getNextRepeatDate(currentDate: Date, repeatType: RepeatType, interval: number): Date {
   const nextDate = new Date(currentDate);
 
   switch (repeatType) {
     case 'daily':
-      nextDate.setDate(currentDate.getDate() + interval);
+      nextDate.setDate(nextDate.getDate() + interval);
       break;
     case 'weekly':
-      nextDate.setDate(currentDate.getDate() + 7 * interval);
+      nextDate.setDate(nextDate.getDate() + 7 * interval);
       break;
-    case 'monthly':
-      nextDate.setMonth(currentDate.getMonth() + interval);
+    case 'monthly': {
+      const currentDay = currentDate.getDate();
+
+      // 다음 달로 이동
+      nextDate.setMonth(nextDate.getMonth() + interval);
+
+      // 해당 월에 같은 일자가 존재하는지 확인하고 없으면 건너뛰기
+      while (true) {
+        const daysInMonth = new Date(nextDate.getFullYear(), nextDate.getMonth() + 1, 0).getDate();
+
+        if (currentDay <= daysInMonth) {
+          // 같은 일자가 존재하면 해당 날짜로 설정
+          nextDate.setDate(currentDay);
+          break;
+        } else {
+          // 같은 일자가 존재하지 않으면 다음 달로 건너뛰기
+          nextDate.setMonth(nextDate.getMonth() + interval);
+        }
+      }
       break;
+    }
     case 'yearly':
-      nextDate.setFullYear(currentDate.getFullYear() + interval);
+      nextDate.setFullYear(nextDate.getFullYear() + interval);
       break;
-    default:
-      nextDate.setDate(currentDate.getDate() + 1);
   }
 
   return nextDate;
