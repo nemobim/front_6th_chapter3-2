@@ -67,9 +67,31 @@ function getNextRepeatDate(currentDate: Date, repeatType: RepeatType, interval: 
       }
       break;
     }
-    case 'yearly':
-      nextDate.setFullYear(nextDate.getFullYear() + interval);
+    case 'yearly': {
+      const currentDay = currentDate.getDate();
+      const currentMonth = currentDate.getMonth();
+
+      // 다음 해로 이동
+      let targetYear = nextDate.getFullYear() + interval;
+
+      // 윤년 2월 29일 같은 특수한 날짜 처리
+      if (currentMonth === 1 && currentDay === 29) {
+        // 해당 해가 윤년인지 확인
+        const isLeapYear = (year: number) =>
+          (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+
+        // 윤년이 아니면 다음 윤년까지 건너뛰기
+        while (!isLeapYear(targetYear)) {
+          targetYear += interval;
+        }
+      }
+
+      // 최종 날짜 설정
+      nextDate.setFullYear(targetYear);
+      nextDate.setMonth(currentMonth);
+      nextDate.setDate(currentDay);
       break;
+    }
   }
 
   return nextDate;
