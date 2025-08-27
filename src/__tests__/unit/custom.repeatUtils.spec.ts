@@ -114,4 +114,52 @@ describe('generateRepeatEvents: 반복 일정을 생성한다.', () => {
       expect(result[1].date).toBe('2024-02-29'); // 2024년 (윤년) - 2021, 2022, 2023, 2025년은 건너뛰기
     });
   });
+  describe('반복 종료 조건을 지정할 수 있다', () => {
+    const mockEvent = createMockEvent(1);
+
+    it('특정 날짜까지 반복 일정을 생성한다', () => {
+      const event: EventForm = {
+        ...mockEvent,
+        date: '2025-01-01',
+        repeat: {
+          type: 'daily',
+          interval: 1,
+          endDate: '2025-01-05',
+        },
+      };
+
+      const result = generateRepeatEvents(event);
+
+      expect(result).toHaveLength(5);
+      expect(result[0].date).toBe('2025-01-01');
+      expect(result[1].date).toBe('2025-01-02');
+      expect(result[2].date).toBe('2025-01-03');
+      expect(result[3].date).toBe('2025-01-04');
+      expect(result[4].date).toBe('2025-01-05');
+    });
+
+    it('endDate가 없는 경우 기본 종료일(2025-10-30)까지 반복 일정을 생성한다', () => {
+      const event: EventForm = {
+        ...mockEvent,
+        date: '2025-01-01',
+        repeat: {
+          type: 'daily',
+          interval: 1,
+          // endDate 없음
+        },
+      };
+
+      const result = generateRepeatEvents(event);
+
+      // 2025-01-01부터 2025-10-30까지의 일수 계산
+      const startDate = new Date('2025-01-01');
+      const endDate = new Date('2025-10-30');
+      const expectedDays =
+        Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+      expect(result).toHaveLength(expectedDays);
+      expect(result[0].date).toBe('2025-01-01');
+      expect(result[result.length - 1].date).toBe('2025-10-30');
+    });
+  });
 });
