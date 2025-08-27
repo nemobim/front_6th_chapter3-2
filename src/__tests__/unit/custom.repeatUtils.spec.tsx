@@ -109,8 +109,6 @@ describe('generateRepeatEvents: 반복 일정을 생성한다.', () => {
 
       const result = generateRepeatEvents(event);
 
-      console.log(result);
-
       expect(result).toHaveLength(2);
       expect(result[0].date).toBe('2020-02-29'); // 2020년 (윤년)
       expect(result[1].date).toBe('2024-02-29'); // 2024년 (윤년) - 2021, 2022, 2023, 2025년은 건너뛰기

@@ -30,69 +30,113 @@ export function generateRepeatEvents(event: EventForm): EventForm[] {
 }
 
 /**
- * 다음 반복 날짜를 계산합니다.
+ * 윤년 확인
+ * @param year 년도
+ * @returns 윤년 여부
+ */
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+/**
+ * 다음 일 반복 날짜 계산
  * @param currentDate 현재 날짜
- * @param repeatType 반복 유형
- * @param interval 간격
+ * @param interval 반복 간격
  * @returns 다음 반복 날짜
  */
-function getNextRepeatDate(currentDate: Date, repeatType: RepeatType, interval: number): Date {
+function getNextDailyDate(currentDate: Date, interval: number): Date {
+  const nextDate = new Date(currentDate);
+  nextDate.setDate(nextDate.getDate() + interval);
+  return nextDate;
+}
+
+/**
+ * 다음 주 반복 날짜 계산
+ * @param currentDate 현재 날짜
+ * @param interval 반복 간격
+ * @returns 다음 반복 날짜
+ */
+function getNextWeeklyDate(currentDate: Date, interval: number): Date {
+  const nextDate = new Date(currentDate);
+  nextDate.setDate(nextDate.getDate() + 7 * interval);
+  return nextDate;
+}
+
+/**
+ * 다음 월 반복 날짜 계산 함수
+ * @param currentDate 현재 날짜
+ * @param interval 반복 간격
+ * @returns 다음 반복 날짜
+ */
+function getNextMonthlyDate(currentDate: Date, interval: number): Date {
+  const currentDay = currentDate.getDate();
   const nextDate = new Date(currentDate);
 
-  switch (repeatType) {
-    case 'daily':
-      nextDate.setDate(nextDate.getDate() + interval);
-      break;
-    case 'weekly':
-      nextDate.setDate(nextDate.getDate() + 7 * interval);
-      break;
-    case 'monthly': {
-      const currentDay = currentDate.getDate();
+  // 다음 달로 이동
+  nextDate.setMonth(nextDate.getMonth() + interval);
 
-      // 다음 달로 이동
-      nextDate.setMonth(nextDate.getMonth() + interval);
+  // 해당 월에 같은 일자가 존재하는지 확인하고 없으면 건너뛰기
+  while (true) {
+    const daysInMonth = new Date(nextDate.getFullYear(), nextDate.getMonth() + 1, 0).getDate();
 
-      // 해당 월에 같은 일자가 존재하는지 확인하고 없으면 건너뛰기
-      while (true) {
-        const daysInMonth = new Date(nextDate.getFullYear(), nextDate.getMonth() + 1, 0).getDate();
-
-        if (currentDay <= daysInMonth) {
-          // 같은 일자가 존재하면 해당 날짜로 설정
-          nextDate.setDate(currentDay);
-          break;
-        } else {
-          // 같은 일자가 존재하지 않으면 다음 달로 건너뛰기
-          nextDate.setMonth(nextDate.getMonth() + interval);
-        }
-      }
-      break;
-    }
-    case 'yearly': {
-      const currentDay = currentDate.getDate();
-      const currentMonth = currentDate.getMonth();
-
-      // 다음 해로 이동
-      let targetYear = nextDate.getFullYear() + interval;
-
-      // 윤년 2월 29일 같은 특수한 날짜 처리
-      if (currentMonth === 1 && currentDay === 29) {
-        // 해당 해가 윤년인지 확인
-        const isLeapYear = (year: number) =>
-          (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-
-        // 윤년이 아니면 다음 윤년까지 건너뛰기
-        while (!isLeapYear(targetYear)) {
-          targetYear += interval;
-        }
-      }
-
-      // 최종 날짜 설정
-      nextDate.setFullYear(targetYear);
-      nextDate.setMonth(currentMonth);
+    if (currentDay <= daysInMonth) {
+      // 같은 일자가 존재하면 해당 날짜로 설정
       nextDate.setDate(currentDay);
       break;
+    } else {
+      // 같은 일자가 존재하지 않으면 다음 달로 건너뛰기
+      nextDate.setMonth(nextDate.getMonth() + interval);
     }
   }
 
   return nextDate;
+}
+
+/**
+ * 다음 년도 반복 날짜 계산 함수
+ * @param currentDate 현재 날짜
+ * @param interval 반복 간격
+ * @returns 다음 반복 날짜
+ */
+function getNextYearlyDate(currentDate: Date, interval: number): Date {
+  const currentDay = currentDate.getDate();
+  const currentMonth = currentDate.getMonth();
+
+  let targetYear = currentDate.getFullYear() + interval;
+
+  // 윤년 2월 29일 처리
+  if (currentMonth === 1 && currentDay === 29) {
+    while (!isLeapYear(targetYear)) {
+      targetYear += interval;
+    }
+  }
+
+  // 최종 날짜 설정
+  const nextDate = new Date(currentDate);
+  nextDate.setFullYear(targetYear);
+  nextDate.setMonth(currentMonth);
+  nextDate.setDate(currentDay);
+  return nextDate;
+}
+
+/**
+ * 반복 날짜 계산 함수
+ * @param currentDate 현재 날짜
+ * @param repeatType 반복 유형
+ * @param interval 반복 간격
+ * @returns 다음 반복 날짜
+ */
+function getNextRepeatDate(currentDate: Date, repeatType: RepeatType, interval: number): Date {
+  switch (repeatType) {
+    case 'daily':
+      return getNextDailyDate(currentDate, interval);
+    case 'weekly':
+      return getNextWeeklyDate(currentDate, interval);
+    case 'monthly':
+      return getNextMonthlyDate(currentDate, interval);
+    case 'yearly':
+      return getNextYearlyDate(currentDate, interval);
+    default:
+      return new Date(currentDate);
+  }
 }
