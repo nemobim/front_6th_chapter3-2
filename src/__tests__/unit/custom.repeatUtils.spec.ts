@@ -163,3 +163,34 @@ describe('generateRepeatEvents: 반복 일정을 생성한다.', () => {
     });
   });
 });
+
+describe('modifyRepeatEvent: 반복 일정을 단일 수정한다.', () => {
+  const mockEvent = createMockEvent(1);
+
+  it('반복 일정을 수정하면 단일 일정으로 변경된다', () => {
+    const originalEvent: EventForm = {
+      ...mockEvent,
+      date: '2025-01-01',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-01-05' },
+    };
+
+    const modifiedEvent = modifyRepeatEvent(originalEvent, '2025-01-03');
+
+    expect(modifiedEvent.repeat.type).toBe('none');
+    expect(modifiedEvent.repeat.interval).toBe(1);
+    expect(modifiedEvent.date).toBe('2025-01-03');
+  });
+
+  it('반복 일정을 수정하면 반복 아이콘이 사라진다', () => {
+    const originalEvent: EventForm = {
+      ...mockEvent,
+      date: '2025-01-01',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-01-29' },
+    };
+
+    const modifiedEvent = modifyRepeatEvent(originalEvent, '2025-01-15');
+
+    expect(modifiedEvent.repeat.type).toBe('none');
+    // 반복 아이콘은 UI에서 처리되므로 repeat.type이 'none'이면 아이콘이 사라짐
+  });
+});
