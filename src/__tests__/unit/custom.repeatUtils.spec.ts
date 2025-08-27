@@ -228,3 +228,39 @@ describe('modifyRepeatEvent: 반복 일정을 단일 수정한다.', () => {
     expect(originalEvent.repeat.type).toBe('weekly');
   });
 });
+
+describe('deleteRepeatEvent: 반복 일정을 단일 삭제한다.', () => {
+  const mockEvent = createMockEvent(1);
+
+  it('반복 일정을 삭제하면 해당 일정만 삭제된다', () => {
+    const originalEvent: EventForm = {
+      ...mockEvent,
+      date: '2025-01-01',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-01-05' },
+    };
+
+    const result = deleteRepeatEvent(originalEvent, '2025-01-03');
+
+    expect(result).toHaveLength(4); // 5개에서 1개 삭제
+    expect(result.find((event) => event.date === '2025-01-03')).toBeUndefined(); // 삭제된 일정은 없음
+    expect(result.find((event) => event.date === '2025-01-01')).toBeDefined(); // 다른 일정은 유지
+    expect(result.find((event) => event.date === '2025-01-05')).toBeDefined(); // 다른 일정은 유지
+  });
+
+  it('삭제된 일정의 반복 속성은 원본과 동일하게 유지된다', () => {
+    const originalEvent: EventForm = {
+      ...mockEvent,
+      date: '2025-01-01',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-01-29' },
+    };
+
+    const result = deleteRepeatEvent(originalEvent, '2025-01-15');
+
+    // 삭제된 일정을 제외한 나머지 일정들은 반복 속성 유지
+    result.forEach((event) => {
+      expect(event.repeat.type).toBe('weekly');
+      expect(event.repeat.interval).toBe(1);
+      expect(event.repeat.endDate).toBe('2025-01-29');
+    });
+  });
+});
