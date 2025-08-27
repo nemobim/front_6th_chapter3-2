@@ -14,20 +14,14 @@ export function RepeatIcon({ repeatType }: RepeatIconProps) {
     return null;
   }
 
-  const getIcon = (type: RepeatType) => {
-    switch (type) {
-      case 'daily':
-        return <Repeat data-testid="repeat-icon" data-repeat-type="daily" />;
-      case 'weekly':
-        return <DateRange data-testid="repeat-icon" data-repeat-type="weekly" />;
-      case 'monthly':
-        return <CalendarViewMonth data-testid="repeat-icon" data-repeat-type="monthly" />;
-      case 'yearly':
-        return <CalendarToday data-testid="repeat-icon" data-repeat-type="yearly" />;
-      default:
-        return null;
-    }
-  };
-
-  return getIcon(repeatType);
+  switch (repeatType) {
+    case 'daily':
+      return <Repeat data-testid="repeat-icon" data-repeat-type="daily" />;
+    case 'weekly':
+      return <DateRange data-testid="repeat-icon" data-repeat-type="weekly" />;
+    case 'monthly':
+      return <CalendarViewMonth data-testid="repeat-icon" data-repeat-type="monthly" />;
+    case 'yearly':
+      return <CalendarToday data-testid="repeat-icon" data-repeat-type="yearly" />;
+  }
 }
