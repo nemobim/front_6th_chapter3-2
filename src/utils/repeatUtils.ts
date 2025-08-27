@@ -140,3 +140,17 @@ function getNextRepeatDate(currentDate: Date, repeatType: RepeatType, interval: 
       return new Date(currentDate);
   }
 }
+
+/**
+ * 반복 일정을 단일 일정으로 수정합니다.
+ * @param originalEvent 원본 반복 일정
+ * @param targetDate 수정할 대상 날짜
+ * @returns 수정된 단일 일정
+ */
+export function modifyRepeatEvent(originalEvent: EventForm, targetDate: string): EventForm {
+  return {
+    ...originalEvent,
+    date: targetDate,
+    repeat: { type: 'none', interval: 1 },
+  };
+}

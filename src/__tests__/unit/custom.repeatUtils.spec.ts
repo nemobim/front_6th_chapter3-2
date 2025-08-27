@@ -1,5 +1,5 @@
 import { EventForm } from '../../types';
-import { generateRepeatEvents } from '../../utils/repeatUtils';
+import { generateRepeatEvents, modifyRepeatEvent } from '../../utils/repeatUtils';
 import { createMockEvent } from '../utils';
 
 describe('generateRepeatEvents: 반복 일정을 생성한다.', () => {
