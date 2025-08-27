@@ -43,15 +43,15 @@ function getNextRepeatDate(currentDate: Date, repeatType: string, interval: numb
     case 'daily':
       nextDate.setDate(currentDate.getDate() + interval);
       break;
-    case 'weekly':
-      nextDate.setDate(currentDate.getDate() + 7 * interval);
-      break;
-    case 'monthly':
-      nextDate.setMonth(currentDate.getMonth() + interval);
-      break;
-    case 'yearly':
-      nextDate.setFullYear(currentDate.getFullYear() + interval);
-      break;
+    // case 'weekly':
+    //   nextDate.setDate(currentDate.getDate() + 7 * interval);
+    //   break;
+    // case 'monthly':
+    //   nextDate.setMonth(currentDate.getMonth() + interval);
+    //   break;
+    // case 'yearly':
+    //   nextDate.setFullYear(currentDate.getFullYear() + interval);
+    //   break;
     default:
       nextDate.setDate(currentDate.getDate() + 1);
   }
