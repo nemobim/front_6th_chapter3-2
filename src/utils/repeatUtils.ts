@@ -154,3 +154,22 @@ export function modifyRepeatEvent(originalEvent: EventForm, targetDate: string):
     repeat: { type: 'none', interval: 1 },
   };
 }
+
+/**
+ * 반복 일정에서 특정 일정을 삭제합니다.
+ * @param originalEvent 원본 반복 일정
+ * @param targetDate 삭제할 대상 날짜
+ * @returns 삭제된 일정을 제외한 반복 일정 배열
+ */
+export function deleteRepeatEvent(originalEvent: EventForm, targetDate: string): EventForm[] {
+  // 반복 일정이 아닌 경우 원본 반환
+  if (originalEvent.repeat.type === 'none') {
+    return [originalEvent];
+  }
+
+  // 반복 일정들을 생성
+  const repeatEvents = generateRepeatEvents(originalEvent);
+
+  // 대상 날짜의 일정을 제외하고 반환
+  return repeatEvents.filter((event) => event.date !== targetDate);
+}
