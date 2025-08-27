@@ -1,4 +1,5 @@
 import { EventForm } from '../../types';
+import { generateRepeatEvents } from '../../utils/repeatUtils';
 import { createMockEvent } from '../utils';
 
 describe('generateRepeatEvents: 반복 일정을 생성한다.', () => {
@@ -25,8 +26,6 @@ describe('generateRepeatEvents: 반복 일정을 생성한다.', () => {
       };
 
       const result = generateRepeatEvents(event);
-
-      console.log(result);
 
       expect(result).toHaveLength(3);
       expect(result[0].date).toBe('2025-01-01');
