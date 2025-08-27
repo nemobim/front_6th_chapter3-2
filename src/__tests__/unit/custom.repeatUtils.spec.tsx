@@ -99,5 +99,21 @@ describe('generateRepeatEvents: 반복 일정을 생성한다.', () => {
       expect(result[2].date).toBe('2027-01-15');
       expect(result[3].date).toBe('2028-01-15');
     });
+
+    it('윤년 29일에 매년 반복 일정을 생성한다', () => {
+      const event: EventForm = {
+        ...mockEvent,
+        date: '2020-02-29', // 2020년은 윤년
+        repeat: { type: 'yearly', interval: 1, endDate: '2025-10-30' },
+      };
+
+      const result = generateRepeatEvents(event);
+
+      console.log(result);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].date).toBe('2020-02-29'); // 2020년 (윤년)
+      expect(result[1].date).toBe('2024-02-29'); // 2024년 (윤년) - 2021, 2022, 2023, 2025년은 건너뛰기
+    });
   });
 });
