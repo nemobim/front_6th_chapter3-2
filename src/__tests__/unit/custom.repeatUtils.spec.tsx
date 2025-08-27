@@ -67,6 +67,23 @@ describe('generateRepeatEvents: 반복 일정을 생성한다.', () => {
       expect(result[4].date).toBe('2025-05-15');
     });
 
+    it('31일에 매월을 선택한다면 매월 마지막이 아닌, 31일에만 생성한다.', () => {
+      const event: EventForm = {
+        ...mockEvent,
+        date: '2025-01-31',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-10-30' },
+      };
+
+      const result = generateRepeatEvents(event);
+
+      expect(result).toHaveLength(5);
+      expect(result[0].date).toBe('2025-01-31');
+      expect(result[1].date).toBe('2025-03-31'); // 2월 건너뛰기
+      expect(result[2].date).toBe('2025-05-31'); // 4월 건너뛰기
+      expect(result[3].date).toBe('2025-07-31'); // 6월 건너뛰기
+      expect(result[4].date).toBe('2025-08-31'); // 8월
+    });
+
     it('매년 반복 일정을 생성한다', () => {
       const event: EventForm = {
         ...mockEvent,
