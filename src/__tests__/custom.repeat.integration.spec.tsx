@@ -1,6 +1,6 @@
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { SnackbarProvider } from 'notistack';
 import { ReactElement } from 'react';
@@ -8,7 +8,8 @@ import { ReactElement } from 'react';
 import App from '../App';
 import { Event, RepeatType } from '../types';
 import { createMockEvent } from './utils';
-import { setupMockHandlerCreation } from '../__mocks__/handlersUtils';
+// 수정: 반복 일정용 mock handler 추가
+import { setupMockHandlerRepeatCreation } from '../__mocks__/handlersUtils';
 
 // 테스트 환경 설정
 const theme = createTheme();
@@ -73,7 +74,8 @@ const saveRepeatSchedule = async (
 describe('반복 일정 통합 테스트', () => {
   describe('시나리오 1: 반복 일정 생성 및 표시', () => {
     it('매일 반복 일정을 생성하고 달력에 올바르게 표시한다', async () => {
-      setupMockHandlerCreation();
+      // 수정: 반복 일정 생성용 mock handler 사용
+      setupMockHandlerRepeatCreation();
 
       const { user } = setup(<App />);
 
@@ -112,7 +114,7 @@ describe('반복 일정 통합 테스트', () => {
     });
 
     it('매주 반복 일정을 생성하고 주간 뷰에서 올바르게 표시한다', async () => {
-      setupMockHandlerCreation();
+      setupMockHandlerRepeatCreation();
 
       const { user } = setup(<App />);
 
@@ -146,7 +148,7 @@ describe('반복 일정 통합 테스트', () => {
     });
 
     it('매월 반복 일정을 생성하고 월간 뷰에서 올바르게 표시한다', async () => {
-      setupMockHandlerCreation();
+      setupMockHandlerRepeatCreation();
 
       const { user } = setup(<App />);
 
@@ -175,7 +177,7 @@ describe('반복 일정 통합 테스트', () => {
     });
 
     it('반복 일정에 올바른 아이콘이 표시된다', async () => {
-      setupMockHandlerCreation();
+      setupMockHandlerRepeatCreation();
 
       const { user } = setup(<App />);
 
@@ -200,7 +202,7 @@ describe('반복 일정 통합 테스트', () => {
     });
 
     it('매년 반복 일정을 생성하고 윤년 처리가 올바르게 작동한다', async () => {
-      setupMockHandlerCreation();
+      setupMockHandlerRepeatCreation();
 
       const { user } = setup(<App />);
 

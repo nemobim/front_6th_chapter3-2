@@ -52,7 +52,6 @@ import {
   getWeeksAtMonth,
 } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
-import { generateRepeatEvents, modifyRepeatEvent, deleteRepeatEvent } from './utils/repeatUtils';
 import { getTimeErrorMessage } from './utils/timeValidation';
 
 const categories = ['업무', '개인', '가족', '기타'];
@@ -101,9 +100,14 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
-  );
+  const {
+    events,
+    saveEvent,
+    deleteEvent,
+    saveRepeatEvents,
+    updateRepeatEvent,
+    deleteRepeatEventById,
+  } = useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
@@ -148,20 +152,11 @@ function App() {
       setIsOverlapDialogOpen(true);
     } else {
       try {
-        // 반복 일정인 경우 generateRepeatEvents로 여러 일정 생성
+        // 수정: 반복 일정인 경우
         if (isRepeating && repeatType !== 'none') {
-          const repeatEvents = generateRepeatEvents(eventData);
-          // 각 반복 일정을 개별적으로 저장 (toast 비활성화)
-          for (const repeatEvent of repeatEvents) {
-            await saveEvent(repeatEvent, false); // toast 비활성화
-          }
-
-          // 반복 일정 생성 완료 toast (한 번만)
-          enqueueSnackbar(`${repeatEvents.length}개의 반복 일정이 생성되었습니다.`, {
-            variant: 'success',
-          });
+          await saveRepeatEvents(eventData);
         } else {
-          // 일반 일정인 경우 원본 저장 (기본 toast 활성화)
+          // 일반 일정인 경우 기존 방식 사용
           await saveEvent(eventData);
         }
         resetForm();
@@ -171,25 +166,22 @@ function App() {
     }
   };
 
-  // 반복 일정 수정 함수 추가
+  /**
+   * 특정 날짜의 반복 일정만 수정
+   * @param event 수정할 반복 일정
+   * @param targetDate 수정할 대상 날짜
+   */
   const handleModifyRepeatEvent = (event: Event, targetDate: string) => {
-    const modifiedEvent = modifyRepeatEvent(event, targetDate);
-    saveEvent(modifiedEvent);
+    updateRepeatEvent(event, targetDate);
   };
 
-  // 반복 일정 삭제 함수 추가
+  /**
+   * 특정 날짜의 반복 일정만 삭제
+   * @param event 삭제할 반복 일정
+   * @param targetDate 삭제할 대상 날짜
+   */
   const handleDeleteRepeatEvent = (event: Event, targetDate: string) => {
-    const remainingEvents = deleteRepeatEvent(event, targetDate);
-
-    // 기존 이벤트 삭제
-    deleteEvent(event.id);
-
-    // 남은 반복 일정들을 추가
-    remainingEvents.forEach((remainingEvent) => {
-      if (remainingEvent.date !== targetDate) {
-        saveEvent(remainingEvent);
-      }
-    });
+    deleteRepeatEventById(event, targetDate);
   };
 
   const renderWeekView = () => {

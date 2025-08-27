@@ -107,8 +107,8 @@ export const setupMockHandlerRepeatCreation = (initEvents = [] as Event[]) => {
       const { events: newEvents } = (await request.json()) as { events: Event[] };
 
       const eventsWithIds = newEvents.map((event, index) => ({
-        id: String(mockEvents.length + index + 1),
         ...event,
+        id: String(mockEvents.length + index + 1),
       }));
 
       mockEvents.push(...eventsWithIds);
