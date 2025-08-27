@@ -12,7 +12,7 @@ export function generateRepeatEvents(event: EventForm): EventForm[] {
   }
 
   const startDate = new Date(event.date);
-  const endDate = event.repeat.endDate ? new Date(event.repeat.endDate) : new Date('2025-12-31');
+  const endDate = event.repeat.endDate ? new Date(event.repeat.endDate) : new Date('2025-10-30'); // 기본 종료일
 
   const events: EventForm[] = [];
   let currentDate = new Date(startDate);
