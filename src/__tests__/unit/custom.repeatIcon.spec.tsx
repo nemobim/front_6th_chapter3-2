@@ -1,4 +1,6 @@
-import { render, renderHook, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+
+import { RepeatIcon } from '../../icons/RepeatIcon';
 
 describe('반복 일정 아이콘을 표시한다', () => {
   it('반복 유형이 none인 경우 아이콘을 표시하지 않는다', () => {
