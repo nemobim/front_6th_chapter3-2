@@ -21,7 +21,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const saveEvent = async (eventData: Event | EventForm) => {
+  const saveEvent = async (eventData: Event | EventForm, showToast: boolean = true) => {
     try {
       let response;
       if (editing) {
@@ -44,9 +44,13 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
       await fetchEvents();
       onSave?.();
-      enqueueSnackbar(editing ? '일정이 수정되었습니다.' : '일정이 추가되었습니다.', {
-        variant: 'success',
-      });
+
+      // showToast 파라미터가 true일 때만 toast 표시
+      if (showToast) {
+        enqueueSnackbar(editing ? '일정이 수정되었습니다.' : '일정이 추가되었습니다.', {
+          variant: 'success',
+        });
+      }
     } catch (error) {
       console.error('Error saving event:', error);
       enqueueSnackbar('일정 저장 실패', { variant: 'error' });

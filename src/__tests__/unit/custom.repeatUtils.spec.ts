@@ -268,7 +268,7 @@ describe('deleteRepeatEvent: 반복 일정을 단일 삭제한다.', () => {
     });
   });
 
-  it('삭제 후 반복 일정의 순서가 올바르게 유지된다', () => {
+  it('삭제 후에도 기존의 반복 일정의 순서가 올바르게 유지된다', () => {
     const originalEvent: EventForm = {
       ...mockEvent,
       date: '2025-01-01',

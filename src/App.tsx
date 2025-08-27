@@ -41,7 +41,8 @@ import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
 // import { Event, EventForm, RepeatType } from './types';
-import { Event, EventForm } from './types';
+import { RepeatIcon } from './icons/RepeatIcon';
+import { Event, EventForm, RepeatType } from './types';
 import {
   formatDate,
   formatMonth,
@@ -51,6 +52,7 @@ import {
   getWeeksAtMonth,
 } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
+import { generateRepeatEvents, modifyRepeatEvent, deleteRepeatEvent } from './utils/repeatUtils';
 import { getTimeErrorMessage } from './utils/timeValidation';
 
 const categories = ['업무', '개인', '가족', '기타'];
@@ -82,11 +84,11 @@ function App() {
     isRepeating,
     setIsRepeating,
     repeatType,
-    // setRepeatType,
+    setRepeatType,
     repeatInterval,
-    // setRepeatInterval,
+    setRepeatInterval,
     repeatEndDate,
-    // setRepeatEndDate,
+    setRepeatEndDate,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -145,9 +147,49 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
-      resetForm();
+      try {
+        // 반복 일정인 경우 generateRepeatEvents로 여러 일정 생성
+        if (isRepeating && repeatType !== 'none') {
+          const repeatEvents = generateRepeatEvents(eventData);
+          // 각 반복 일정을 개별적으로 저장 (toast 비활성화)
+          for (const repeatEvent of repeatEvents) {
+            await saveEvent(repeatEvent, false); // toast 비활성화
+          }
+
+          // 반복 일정 생성 완료 toast (한 번만)
+          enqueueSnackbar(`${repeatEvents.length}개의 반복 일정이 생성되었습니다.`, {
+            variant: 'success',
+          });
+        } else {
+          // 일반 일정인 경우 원본 저장 (기본 toast 활성화)
+          await saveEvent(eventData);
+        }
+        resetForm();
+      } catch {
+        enqueueSnackbar('일정 저장 중 오류가 발생했습니다.', { variant: 'error' });
+      }
     }
+  };
+
+  // 반복 일정 수정 함수 추가
+  const handleModifyRepeatEvent = (event: Event, targetDate: string) => {
+    const modifiedEvent = modifyRepeatEvent(event, targetDate);
+    saveEvent(modifiedEvent);
+  };
+
+  // 반복 일정 삭제 함수 추가
+  const handleDeleteRepeatEvent = (event: Event, targetDate: string) => {
+    const remainingEvents = deleteRepeatEvent(event, targetDate);
+
+    // 기존 이벤트 삭제
+    deleteEvent(event.id);
+
+    // 남은 반복 일정들을 추가
+    remainingEvents.forEach((remainingEvent) => {
+      if (remainingEvent.date !== targetDate) {
+        saveEvent(remainingEvent);
+      }
+    });
   };
 
   const renderWeekView = () => {
@@ -318,6 +360,99 @@ function App() {
     );
   };
 
+  const renderEventList = () => (
+    <Stack
+      data-testid="event-list"
+      spacing={2}
+      sx={{ width: '30%', height: '100%', overflowY: 'auto' }}
+    >
+      <FormControl fullWidth>
+        <FormLabel htmlFor="search">일정 검색</FormLabel>
+        <TextField
+          id="search"
+          size="small"
+          placeholder="검색어를 입력하세요"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </FormControl>
+
+      {filteredEvents.length === 0 ? (
+        <Typography>검색 결과가 없습니다.</Typography>
+      ) : (
+        filteredEvents.map((event) => (
+          <Box key={event.id} sx={{ border: 1, borderRadius: 2, p: 3, width: '100%' }}>
+            <Stack direction="row" justifyContent="space-between">
+              <Stack>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {notifiedEvents.includes(event.id) && <Notifications color="error" />}
+                  <RepeatIcon repeatType={event.repeat.type} />
+                  <Typography
+                    fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
+                    color={notifiedEvents.includes(event.id) ? 'error' : 'inherit'}
+                  >
+                    {event.title}
+                  </Typography>
+                </Stack>
+                <Typography>{event.date}</Typography>
+                <Typography>
+                  {event.startTime} - {event.endTime}
+                </Typography>
+                <Typography>{event.description}</Typography>
+                <Typography>{event.location}</Typography>
+                <Typography>카테고리: {event.category}</Typography>
+                {event.repeat.type !== 'none' && (
+                  <Typography>
+                    반복: {event.repeat.interval}
+                    {event.repeat.type === 'daily' && '일'}
+                    {event.repeat.type === 'weekly' && '주'}
+                    {event.repeat.type === 'monthly' && '월'}
+                    {event.repeat.type === 'yearly' && '년'}
+                    마다
+                    {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
+                  </Typography>
+                )}
+                <Typography>
+                  알림:{' '}
+                  {
+                    notificationOptions.find((option) => option.value === event.notificationTime)
+                      ?.label
+                  }
+                </Typography>
+              </Stack>
+              <Stack>
+                <IconButton aria-label="Edit event" onClick={() => editEvent(event)}>
+                  <Edit />
+                </IconButton>
+                {event.repeat.type !== 'none' && (
+                  <IconButton
+                    aria-label="Modify repeat event"
+                    onClick={() => handleModifyRepeatEvent(event, event.date)}
+                    title="이 반복 일정만 수정"
+                  >
+                    <Edit />
+                  </IconButton>
+                )}
+                <IconButton aria-label="Delete event" onClick={() => deleteEvent(event.id)}>
+                  <Delete />
+                </IconButton>
+                {event.repeat.type !== 'none' && (
+                  <IconButton
+                    aria-label="Delete repeat event"
+                    onClick={() => handleDeleteRepeatEvent(event, event.date)}
+                    title="이 반복 일정만 삭제"
+                  >
+                    <Delete />
+                  </IconButton>
+                )}
+              </Stack>
+            </Stack>
+          </Box>
+        ))
+      )}
+    </Stack>
+  );
+
   return (
     <Box sx={{ width: '100%', height: '100vh', margin: 'auto', p: 5 }}>
       <Stack direction="row" spacing={6} sx={{ height: '100%' }}>
@@ -443,7 +578,7 @@ function App() {
           </FormControl>
 
           {/* ! 반복은 8주차 과제에 포함됩니다. 구현하고 싶어도 참아주세요~ */}
-          {/* {isRepeating && (
+          {isRepeating && (
             <Stack spacing={2}>
               <FormControl fullWidth>
                 <FormLabel>반복 유형</FormLabel>
@@ -480,7 +615,7 @@ function App() {
                 </FormControl>
               </Stack>
             </Stack>
-          )} */}
+          )}
 
           <Button
             data-testid="event-submit-button"
@@ -521,78 +656,7 @@ function App() {
           {view === 'month' && renderMonthView()}
         </Stack>
 
-        <Stack
-          data-testid="event-list"
-          spacing={2}
-          sx={{ width: '30%', height: '100%', overflowY: 'auto' }}
-        >
-          <FormControl fullWidth>
-            <FormLabel htmlFor="search">일정 검색</FormLabel>
-            <TextField
-              id="search"
-              size="small"
-              placeholder="검색어를 입력하세요"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </FormControl>
-
-          {filteredEvents.length === 0 ? (
-            <Typography>검색 결과가 없습니다.</Typography>
-          ) : (
-            filteredEvents.map((event) => (
-              <Box key={event.id} sx={{ border: 1, borderRadius: 2, p: 3, width: '100%' }}>
-                <Stack direction="row" justifyContent="space-between">
-                  <Stack>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      {notifiedEvents.includes(event.id) && <Notifications color="error" />}
-                      <Typography
-                        fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
-                        color={notifiedEvents.includes(event.id) ? 'error' : 'inherit'}
-                      >
-                        {event.title}
-                      </Typography>
-                    </Stack>
-                    <Typography>{event.date}</Typography>
-                    <Typography>
-                      {event.startTime} - {event.endTime}
-                    </Typography>
-                    <Typography>{event.description}</Typography>
-                    <Typography>{event.location}</Typography>
-                    <Typography>카테고리: {event.category}</Typography>
-                    {event.repeat.type !== 'none' && (
-                      <Typography>
-                        반복: {event.repeat.interval}
-                        {event.repeat.type === 'daily' && '일'}
-                        {event.repeat.type === 'weekly' && '주'}
-                        {event.repeat.type === 'monthly' && '월'}
-                        {event.repeat.type === 'yearly' && '년'}
-                        마다
-                        {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
-                      </Typography>
-                    )}
-                    <Typography>
-                      알림:{' '}
-                      {
-                        notificationOptions.find(
-                          (option) => option.value === event.notificationTime
-                        )?.label
-                      }
-                    </Typography>
-                  </Stack>
-                  <Stack>
-                    <IconButton aria-label="Edit event" onClick={() => editEvent(event)}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton aria-label="Delete event" onClick={() => deleteEvent(event.id)}>
-                      <Delete />
-                    </IconButton>
-                  </Stack>
-                </Stack>
-              </Box>
-            ))
-          )}
-        </Stack>
+        {renderEventList()}
       </Stack>
 
       <Dialog open={isOverlapDialogOpen} onClose={() => setIsOverlapDialogOpen(false)}>
