@@ -193,4 +193,38 @@ describe('modifyRepeatEvent: 반복 일정을 단일 수정한다.', () => {
     expect(modifiedEvent.repeat.type).toBe('none');
     // 반복 아이콘은 UI에서 처리되므로 repeat.type이 'none'이면 아이콘이 사라짐
   });
+
+  it('수정된 일정의 다른 속성들이 보존된다', () => {
+    const originalEvent: EventForm = {
+      ...mockEvent,
+      title: '회의',
+      description: '중요한 회의',
+      date: '2025-01-01',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-12-31' },
+    };
+
+    const modifiedEvent = modifyRepeatEvent(originalEvent, '2025-03-15');
+
+    // 반복 속성만 변경되고 다른 속성은 보존
+    expect(modifiedEvent.title).toBe('회의');
+    expect(modifiedEvent.description).toBe('중요한 회의');
+    expect(modifiedEvent.date).toBe('2025-03-15');
+    expect(modifiedEvent.repeat.type).toBe('none');
+  });
+
+  it('반복 일정의 특정 인스턴스만 수정할 수 있다', () => {
+    const originalEvent: EventForm = {
+      ...mockEvent,
+      date: '2025-01-01',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-01-29' },
+    };
+
+    // 1월 15일의 반복 일정만 수정
+    const modifiedEvent = modifyRepeatEvent(originalEvent, '2025-01-15');
+
+    expect(modifiedEvent.date).toBe('2025-01-15');
+    expect(modifiedEvent.repeat.type).toBe('none');
+    // 원본 일정은 변경되지 않음
+    expect(originalEvent.repeat.type).toBe('weekly');
+  });
 });
