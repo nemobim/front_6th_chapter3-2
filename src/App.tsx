@@ -248,6 +248,7 @@ function App() {
                           >
                             <Stack direction="row" spacing={1} alignItems="center">
                               {isNotified && <Notifications fontSize="small" />}
+                              <RepeatIcon repeatType={event.repeat.type} />
                               <Typography
                                 variant="caption"
                                 noWrap
@@ -335,6 +336,7 @@ function App() {
                                 >
                                   <Stack direction="row" spacing={1} alignItems="center">
                                     {isNotified && <Notifications fontSize="small" />}
+                                    <RepeatIcon repeatType={event.repeat.type} />
                                     <Typography
                                       variant="caption"
                                       noWrap
