@@ -267,4 +267,21 @@ describe('deleteRepeatEvent: 반복 일정을 단일 삭제한다.', () => {
       expect(event.repeat.endDate).toBe('2025-01-29');
     });
   });
+
+  it('삭제 후 반복 일정의 순서가 올바르게 유지된다', () => {
+    const originalEvent: EventForm = {
+      ...mockEvent,
+      date: '2025-01-01',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-01-29' },
+    };
+
+    const result = deleteRepeatEvent(originalEvent, '2025-01-15');
+
+    // 삭제 후에도 날짜 순서가 올바름
+    expect(result).toHaveLength(4);
+    expect(result[0].date).toBe('2025-01-01');
+    expect(result[1].date).toBe('2025-01-08');
+    expect(result[2].date).toBe('2025-01-22');
+    expect(result[3].date).toBe('2025-01-29');
+  });
 });
