@@ -179,5 +179,27 @@ describe('반복 일정 통합 테스트', () => {
       expect(repeatIcons).toHaveLength(2);
       expect(repeatIcons[0]).toHaveAttribute('data-repeat-type', 'daily');
     }, 10000);
+
+    it('매년 반복 일정을 생성하고 윤년 처리가 올바르게 작동한다', async () => {
+      setupMockHandlerRepeatCreation();
+
+      const { user } = setup(<App />);
+
+      const mockEvent = createMockEvent(5, {
+        title: '생일 파티',
+        date: '2020-02-29', // 2020년은 윤년
+        startTime: '18:00',
+        endTime: '20:00',
+        description: '생일 축하 파티',
+        location: '집',
+        category: '개인',
+        repeat: { type: 'yearly', interval: 1, endDate: '2025-02-28' },
+      });
+
+      await saveRepeatSchedule(user, mockEvent);
+
+      // 윤년이 아닌 해는 건너뛰므로 2개의 일정만 생성 (2020, 2024)
+      expect(screen.getByText('2개의 반복 일정이 생성되었습니다.')).toBeInTheDocument();
+    });
   });
 });
