@@ -3,7 +3,6 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './src/__tests__',
   testMatch: '**/*.e2e.spec.ts',
-  testIgnore: ['**/node_modules/**', '**/playwright.config.ts'], // 설정 파일 제외
   fullyParallel: false, // CI에서는 false로 설정
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
