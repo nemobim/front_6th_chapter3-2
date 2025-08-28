@@ -1,7 +1,8 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, PathParams } from 'msw';
 
+import { createMockEvent } from '../__tests__/utils';
 import { server } from '../setupTests';
-import { Event } from '../types';
+import { Event, EventForm } from '../types';
 
 // ! Hard 여기 제공 안함
 export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
@@ -89,6 +90,41 @@ export const setupMockHandlerDeletion = () => {
 
       mockEvents.splice(index, 1);
       return new HttpResponse(null, { status: 204 });
+    })
+  );
+};
+
+/** 반복 일정 생성 */
+export const setupMockHandlerRepeatingEvents = () => {
+  const mockEvents = [
+    createMockEvent(1, {
+      title: '자고싶다',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '09:30',
+      description: '일일 스크럼 미팅',
+    }),
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.post<PathParams, { events: EventForm[] }>('/api/events-list', async ({ request }) => {
+      const newEvents = (await request.json()).events.map((event, index) => {
+        const isRepeatEvent = event.repeat.type !== 'none';
+        return {
+          id: String(mockEvents.length + index + 1), // 고유한 ID 생성
+          ...event,
+          repeat: {
+            ...event.repeat,
+            id: isRepeatEvent ? String(mockEvents.length + index + 1) : undefined,
+          },
+        };
+      });
+
+      mockEvents.push(...newEvents);
+      return HttpResponse.json({ events: newEvents }, { status: 201 });
     })
   );
 };
