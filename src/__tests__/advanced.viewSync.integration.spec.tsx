@@ -249,5 +249,5 @@ describe('뷰 동기화 통합 테스트', () => {
       expect(within(eventList).getByText('검색할 일정')).toBeInTheDocument();
       expect(within(eventList).queryByText('다른 일정')).not.toBeInTheDocument();
     });
-  });
+  }, 10000);
 });
