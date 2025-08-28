@@ -6,14 +6,13 @@ on:
       - synchronize
       - opened
       - reopened
-
   workflow_dispatch:
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
@@ -24,14 +23,15 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
-      - name: test basic
-        run: |
-          pnpm install
-          pnpm run lint
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run linting
+        run: pnpm run lint
+
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
@@ -42,12 +42,11 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
-      - name: test basic
-        run: |
-          pnpm install
-          pnpm run test
-          npx playwright install --with-deps
-          pnpm run test:e2e
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run unit tests
+        run: pnpm run test
+
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 10
