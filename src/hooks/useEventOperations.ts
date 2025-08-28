@@ -2,7 +2,7 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
-import { deleteRepeatEvent, generateRepeatEvents, modifyRepeatEvent } from '../utils/repeatUtils';
+import { generateRepeatEvents, modifyRepeatEvent } from '../utils/repeatUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -90,8 +90,8 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         // 같은 repeatId를 가진 모든 이벤트 찾기
         const repeatEvents = events.filter((event) => event.repeat.id === eventToDelete.repeat.id);
 
-        // 단일 삭제 처리 - 해당 일정만 제외한 나머지 반복 일정들
-        const remainingEvents = deleteRepeatEvent(eventToDelete, eventToDelete.date);
+        // 삭제할 이벤트를 제외한 나머지 이벤트들
+        const remainingEvents = repeatEvents.filter((event) => event.id !== id);
 
         // 기존 반복 일정들 모두 삭제
         const deleteResponse = await fetch('/api/events-list', {
@@ -106,10 +106,19 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
         // 남은 반복 일정들 다시 생성 (삭제된 일정 제외)
         if (remainingEvents.length > 0) {
+          // repeat.id를 제거하고 다시 생성 (새로운 repeatId가 할당됨)
+          const eventsToRecreate = remainingEvents.map((event) => ({
+            ...event,
+            repeat: {
+              ...event.repeat,
+              id: undefined, // 새로운 repeatId가 할당되도록
+            },
+          }));
+
           const createResponse = await fetch('/api/events-list', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ events: remainingEvents }),
+            body: JSON.stringify({ events: eventsToRecreate }),
           });
 
           if (!createResponse.ok) {
