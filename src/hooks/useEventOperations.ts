@@ -8,6 +8,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
   const { enqueueSnackbar } = useSnackbar();
 
+  // 일정 조회
   const fetchEvents = async () => {
     try {
       const response = await fetch('/api/events');
@@ -22,6 +23,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  // 일정 저장
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
       let response;
@@ -77,60 +79,13 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       enqueueSnackbar('일정 저장 실패', { variant: 'error' });
     }
   };
+
   const deleteEvent = async (id: string) => {
     try {
-      // 삭제할 이벤트 찾기
-      const eventToDelete = events.find((event) => event.id === id);
-      if (!eventToDelete) {
-        throw new Error('Event not found');
-      }
+      const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
 
-      // 반복 일정이면서 repeatId가 있는 경우 (반복 일정의 단일 삭제)
-      if (eventToDelete.repeat.type !== 'none' && eventToDelete.repeat.id) {
-        // 같은 repeatId를 가진 모든 이벤트 찾기
-        const repeatEvents = events.filter((event) => event.repeat.id === eventToDelete.repeat.id);
-
-        // 삭제할 이벤트를 제외한 나머지 이벤트들
-        const remainingEvents = repeatEvents.filter((event) => event.id !== id);
-
-        // 기존 반복 일정들 모두 삭제
-        const deleteResponse = await fetch('/api/events-list', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ eventIds: repeatEvents.map((e) => e.id) }),
-        });
-
-        if (!deleteResponse.ok) {
-          throw new Error('Failed to delete repeat events');
-        }
-
-        // 남은 반복 일정들 다시 생성 (삭제된 일정 제외)
-        if (remainingEvents.length > 0) {
-          // repeat.id를 제거하고 다시 생성 (새로운 repeatId가 할당됨)
-          const eventsToRecreate = remainingEvents.map((event) => ({
-            ...event,
-            repeat: {
-              ...event.repeat,
-              id: undefined, // 새로운 repeatId가 할당되도록
-            },
-          }));
-
-          const createResponse = await fetch('/api/events-list', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ events: eventsToRecreate }),
-          });
-
-          if (!createResponse.ok) {
-            throw new Error('Failed to recreate repeat events');
-          }
-        }
-      } else {
-        // 단일 일정 삭제
-        const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
-        if (!response.ok) {
-          throw new Error('Failed to delete event');
-        }
+      if (!response.ok) {
+        throw new Error('Failed to delete event');
       }
 
       await fetchEvents();
