@@ -233,6 +233,7 @@ describe('modifyRepeatEvent: 반복 일정을 단일 수정한다.', () => {
   });
 });
 
+// 반복 일정 단일 삭제 , 구현은 했지만 api로 아이디로 넘겨서 삭제하면 되는거라 필요없었음...
 describe('deleteRepeatEvent: 반복 일정을 단일 삭제한다.', () => {
   const mockEvent = createMockEvent(1);
 

@@ -28,12 +28,9 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     try {
       let response;
 
-      // 반복 일정인 경우
-      if (eventData.repeat.type !== 'none') {
-        const repeatEvents = generateRepeatEvents(eventData);
-
-        if (editing) {
-          // 반복 일정 수정 시 단일 일정으로 변환
+      if (editing) {
+        // 반복 일정이면 단일 일정으로 변경
+        if (eventData.repeat.type !== 'none') {
           const modifiedEvent = modifyRepeatEvent(eventData as EventForm, eventData.date);
           response = await fetch(`/api/events/${(eventData as Event).id}`, {
             method: 'PUT',
@@ -41,20 +38,21 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
             body: JSON.stringify(modifiedEvent),
           });
         } else {
-          // 새로운 반복 일정 생성
-          response = await fetch('/api/events-list', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ events: repeatEvents }),
-          });
-        }
-      } else {
-        // 단일 일정 처리
-        if (editing) {
+          // 단일 일정 수정
           response = await fetch(`/api/events/${(eventData as Event).id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(eventData),
+          });
+        }
+      } else {
+        // 새로운 일정 생성
+        if (eventData.repeat.type !== 'none') {
+          const repeatEvents = generateRepeatEvents(eventData);
+          response = await fetch('/api/events-list', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ events: repeatEvents }),
           });
         } else {
           response = await fetch('/api/events', {
