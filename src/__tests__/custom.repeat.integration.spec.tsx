@@ -7,8 +7,8 @@ import { ReactElement } from 'react';
 
 import { setupMockHandlerRepeatingEvents } from '../__mocks__/handlersUtils';
 import App from '../App';
-import { createMockEvent } from './utils';
 import { Event } from '../types';
+import { createMockEvent } from './utils';
 
 // 테스트 환경 설정
 const theme = createTheme();
@@ -93,7 +93,7 @@ describe('반복 일정 통합 테스트', () => {
       // 월간 뷰에서 반복 아이콘 표시 확인
       const monthView = within(screen.getByTestId('month-view'));
       expect(monthView.getAllByTestId('repeat-icon')).toHaveLength(3);
-    }, 10000);
+    });
 
     it('매주 반복 일정을 생성하고 달력에 올바르게 표시한다', async () => {
       setupMockHandlerRepeatingEvents();
@@ -125,7 +125,7 @@ describe('반복 일정 통합 테스트', () => {
       // 월간 뷰에서 반복 아이콘 표시 확인
       const monthView = within(screen.getByTestId('month-view'));
       expect(monthView.getAllByTestId('repeat-icon')).toHaveLength(3);
-    }, 10000);
+    });
 
     it('매월 반복 일정을 생성하고 월간 뷰에서 올바르게 표시한다', async () => {
       setupMockHandlerRepeatingEvents();
@@ -156,7 +156,7 @@ describe('반복 일정 통합 테스트', () => {
 
       // 반복 아이콘 확인
       expect(monthView.getAllByTestId('repeat-icon')).toHaveLength(1);
-    }, 10000);
+    });
 
     it('반복 일정에 올바른 아이콘이 표시된다', async () => {
       setupMockHandlerRepeatingEvents();
@@ -183,5 +183,39 @@ describe('반복 일정 통합 테스트', () => {
       expect(repeatIcons).toHaveLength(2);
       expect(repeatIcons[0]).toHaveAttribute('data-repeat-type', 'daily');
     }, 10000);
+  });
+
+  describe('시나리오 2: 반복 종료 조건', () => {
+    it('반복 종료일을 2025-10-30까지 설정할 수 있다', async () => {
+      setupMockHandlerRepeatingEvents();
+
+      const { user } = setup(<App />);
+
+      const mockEvent = createMockEvent(4, {
+        title: '반복 종료 테스트',
+        date: '2025-10-25',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '반복 종료일 테스트',
+        location: '테스트룸',
+        category: '기타',
+        repeat: { type: 'daily', interval: 1, endDate: '2025-11-30' },
+      });
+
+      await saveRepeatSchedule(user, mockEvent);
+
+      // 일정 로딩 완료 대기
+      expect(screen.getByText('일정 로딩 완료!')).toBeInTheDocument();
+
+      // 반복 종료일까지의 일정이 올바르게 생성됨 확인 (10-25부터 10-30까지 6일)
+      const eventList = within(screen.getByTestId('event-list'));
+      const testEvents = eventList.getAllByText('반복 종료 테스트');
+      expect(testEvents).toHaveLength(7);
+
+      // 모든 일정에 반복 아이콘이 표시됨
+      const monthView = within(screen.getByTestId('month-view'));
+      const repeatIcons = monthView.getAllByTestId('repeat-icon');
+      expect(repeatIcons).toHaveLength(7);
+    });
   });
 });
