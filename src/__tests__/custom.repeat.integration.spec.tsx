@@ -153,5 +153,31 @@ describe('반복 일정 통합 테스트', () => {
       // 반복 아이콘 확인
       expect(monthView.getAllByTestId('repeat-icon')).toHaveLength(1);
     }, 10000);
+
+    it('반복 일정에 올바른 아이콘이 표시된다', async () => {
+      setupMockHandlerRepeatCreation();
+
+      const { user } = setup(<App />);
+
+      const mockEvent = createMockEvent(4, {
+        title: '테스트 반복 일정',
+        date: '2025-10-15',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '아이콘 테스트용',
+        location: '테스트',
+        category: '기타',
+        repeat: { type: 'daily', interval: 1, endDate: '2025-10-16' },
+      });
+
+      // 매일 반복 일정 생성
+      await saveRepeatSchedule(user, mockEvent);
+
+      // 이벤트 리스트에서 반복 아이콘 확인
+      const eventList = within(screen.getByTestId('event-list'));
+      const repeatIcons = eventList.getAllByTestId('repeat-icon');
+      expect(repeatIcons).toHaveLength(2);
+      expect(repeatIcons[0]).toHaveAttribute('data-repeat-type', 'daily');
+    }, 10000);
   });
 });
